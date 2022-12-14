@@ -17,7 +17,7 @@ step "deploy-trident-web" {
                 
                 $number = Get-Random -Maximum 10 
                 Write-host "The random number is $number"
-                if ($number -ge 8) 
+                if ($number -ge 5) 
                 {
                 write-host "forcing an error becasue reasons."
                 Exit 1
