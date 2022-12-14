@@ -16,7 +16,8 @@ step "deploy-trident-web" {
                 
                 write-host "remove $machinename from the load balancer"
                 
-                
+                write-host "forcing an error becasue reasons."
+                Exit 1
             EOT
             Octopus.Action.Script.ScriptSource = "Inline"
             Octopus.Action.Script.Syntax = "PowerShell"
