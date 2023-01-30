@@ -90,6 +90,7 @@ step "generate-database-delta-report" {
             Octopus.Action.Script.ScriptSource = "Inline"
             Octopus.Action.Script.Syntax = "PowerShell"
         }
+        worker_pool = "default-worker-pool-1"
 
         packages "Trident.Database" {
             acquisition_location = "Server"
