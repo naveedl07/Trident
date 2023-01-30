@@ -20,7 +20,6 @@ step "run-octopus-deploy-runbook" {
             Run.Runbook.UsePublishedSnapShot = "True"
             Run.Runbook.Waitforfinish = "True"
         }
-        worker_pool = "default-worker-pool-1"
     }
 }
 
