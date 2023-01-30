@@ -24,6 +24,7 @@ step "run-octopus-deploy-runbook" {
 }
 
 step "generate-database-delta-report" {
+    condition = "Always"
     name = "Generate Database Delta Report"
 
     action {
@@ -89,7 +90,6 @@ step "generate-database-delta-report" {
             Octopus.Action.Script.ScriptSource = "Inline"
             Octopus.Action.Script.Syntax = "PowerShell"
         }
-        worker_pool = "default-worker-pool-1"
 
         packages "Trident.Database" {
             acquisition_location = "Server"
