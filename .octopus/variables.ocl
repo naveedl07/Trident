@@ -16,3 +16,7 @@ variable "Octopus.ServiceNow.ChangeRequest.Number" {
         }
     }
 }
+
+variable "Project.Database.ApprovalRequired" {
+    value "#{Octopus.Action[Generate Database Delta Report].Output.ApprovalRequired}" {}
+}
