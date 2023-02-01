@@ -1,3 +1,7 @@
+variable "ConnectionStrings:Database" {
+    value "Server=#{Project.Database.Server.Name};Database=#{Project.Database.Name};User ID=#{Project.Database.User.Name};Password=#{Project.Database.User.Password};" {}
+}
+
 variable "Octopus.ServiceNow.ChangeRequest.Number" {
     value {
         environment = ["production"]
@@ -11,20 +15,4 @@ variable "Octopus.ServiceNow.ChangeRequest.Number" {
             required = true
         }
     }
-}
-
-variable "Project.Database.ApprovalRequired" {
-    value "#{Octopus.Action[Generate Database Delta Report].Output.ApprovalRequired}" {}
-}
-
-variable "Project.Database.Report.Path" {
-    value "C:\\DatabaseReports\\#{Octopus.Environment.Name}" {}
-}
-
-variable "Project.Connection.String" {
-    value "Server=#{Project.Database.Server.Name};Integrated Security=true;Database=#{Project.Database.Name}" {}
-}
-
-variable "ConnectionStrings:Database" {
-    value "Server=#{Project.Connection.String}#{Project.Database.Server.Name};Database=#{Project.Database.Name};User ID=#{Project.Database.User.Name};Password=#{Project.Database.User.Password};" {}
 }
