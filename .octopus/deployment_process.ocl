@@ -1,3 +1,159 @@
+step "run-octopus-deploy-runbook" {
+    name = "Run Octopus Deploy Runbook"
+
+    action {
+        properties = {
+            Octopus.Action.RunOnServer = "true"
+            Octopus.Action.Template.Id = "ActionTemplates-3"
+            Octopus.Action.Template.Version = "14"
+            Run.Runbook.Api.Key = "#{Project.Runbook.API.Key}"
+            Run.Runbook.AutoApproveManualInterventions = "No"
+            Run.Runbook.Base.Url = "#{Octopus.Web.ServerUri}"
+            Run.Runbook.CancelInSeconds = "1800"
+            Run.Runbook.DateTime = "N/A"
+            Run.Runbook.Environment.Name = "#{Octopus.Environment.Name}"
+            Run.Runbook.Machines = "N/A"
+            Run.Runbook.ManualIntervention.EnvironmentToUse = "#{Octopus.Environment.Name}"
+            Run.Runbook.Name = "Create Trident Database"
+            Run.Runbook.Project.Name = "Trident"
+            Run.Runbook.Space.Name = "#{Octopus.Space.Name}"
+            Run.Runbook.UsePublishedSnapShot = "True"
+            Run.Runbook.Waitforfinish = "True"
+        }
+    }
+}
+
+step "generate-database-delta-report" {
+    condition = "Always"
+    name = "Generate Database Delta Report"
+
+    action {
+        action_type = "Octopus.Script"
+        channels = ["dev-qa"]
+        properties = {
+            Octopus.Action.RunOnServer = "true"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                $packagePath = $OctopusParameters["Octopus.Action.Package[Trident.Database].ExtractedPath"]
+                $connectionString = $OctopusParameters["Project.Connection.String"]
+                $commandstolookfor = $OctopusParameters["SQL.Verification.Command.List"]
+                $environmentName = $OctopusParameters["Octopus.Environment.Name"]
+                $reportPath = $OctopusParameters["Project.Database.Report.Path"]
+                
+                cd $packagePath
+                $appToRun = ".\Octopus.Trident.Database.DbUp"
+                $generatedReport = "$reportPath\UpgradeReport.html"
+                
+                & $appToRun --ConnectionString="$connectionString" --PreviewReportPath="$reportPath"
+                
+                New-OctopusArtifact -Path "$generatedReport" -Name "$environmentName.UpgradeReport.html"
+                $packagePath = $OctopusParameters["Octopus.Action.Package[Trident.Database].ExtractedPath"]
+                $connectionString = $OctopusParameters["Project.Connection.String"]
+                $commandsToLookFor = $OctopusParameters["SQL.Verification.Command.List"]
+                $environmentName = $OctopusParameters["Octopus.Environment.Name"]
+                $reportPath = $OctopusParameters["Project.Database.Report.Path"]
+                
+                cd $packagePath
+                $appToRun = ".\Octopus.Trident.Database.DbUp"
+                $generatedReport = "$reportPath\UpgradeReport.html"
+                
+                & $appToRun --ConnectionString="$connectionString" --PreviewReportPath="$reportPath"
+                
+                New-OctopusArtifact -Path "$generatedReport" -Name "$environmentName.UpgradeReport.html"
+                
+                Write-Host "Looping through all commands"
+                $commandListToCheck = $CommandsToLookFor -split ","
+                $ApprovalRequired = $false
+                
+                $fileContent = Get-Content -path $generatedReport
+                foreach ($command in $commandListToCheck)
+                {
+                    Write-Host "Checking $($sqlFile.FileName) for command $command"
+                    $foundCommand = $fileContent -match "$command"
+                
+                    if ($foundCommand)
+                    {
+                        Write-Highlight "$($sqlFile.FileName) has the command '$command'"
+                        $ApprovalRequired = $true
+                    }
+                }
+                
+                if ($approvalRequired -eq $false)
+                {
+                    Write-Highlight "All scripts look good"
+                }
+                else
+                {
+                    Write-Highlight "One of the specific commands we look for has been found"
+                }
+                
+                Set-OctopusVariable -name "ApprovalRequired" -value $ApprovalRequired
+            EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool = "default-worker-pool-1"
+
+        packages "Trident.Database" {
+            acquisition_location = "Server"
+            feed = "octopus-server-built-in"
+            package_id = "Trident.Database"
+            properties = {
+                Extract = "True"
+                Purpose = ""
+                SelectionMode = "immediate"
+            }
+        }
+    }
+}
+
+step "approve-database-delta-script" {
+    name = "Approve Database Delta script "
+
+    action {
+        action_type = "Octopus.Manual"
+        properties = {
+            Octopus.Action.Manual.BlockConcurrentDeployments = "True"
+            Octopus.Action.Manual.Instructions = "Please approve the database delta script found in the artifacts section"
+            Octopus.Action.Manual.ResponsibleTeamIds = "dbas,global/octopus-managers"
+        }
+    }
+}
+
+step "deploy-the-database-changes" {
+    name = "Deploy the Database changes "
+
+    action {
+        action_type = "Octopus.Script"
+        properties = {
+            Octopus.Action.RunOnServer = "true"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                $packagePath = $OctopusParameters["Octopus.Action.Package[Trident.Database].ExtractedPath"]
+                $connectionString = $OctopusParameters["Project.Connection.String"]
+                $environmentName = $OctopusParameters["Octopus.Environment.Name"]
+                
+                cd $packagePath
+                $appToRun = ".\Octopus.Trident.Database.DbUp"
+                
+                & $appToRun --ConnectionString="$connectionString"
+            EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool = "default-worker-pool-1"
+
+        packages "Trident.Database" {
+            acquisition_location = "Server"
+            feed = "octopus-server-built-in"
+            package_id = "Trident.Database"
+            properties = {
+                Extract = "True"
+                Purpose = ""
+                SelectionMode = "immediate"
+            }
+        }
+    }
+}
+
 step "deploy-trident-web" {
     name = "Deploy trident.web"
     properties = {
@@ -77,6 +233,5 @@ step "notify-devs-of-status" {
             Octopus.Action.Email.Subject = "#{Octopus.Project.Name} #{Octopus.Release.Number} to #{Octopus.Environment.Name} has #{if Octopus.Deployment.Error}failed#{else}completed successfully#{/if}"
             Octopus.Action.Email.ToTeamIds = "trident-notifications"
         }
-        worker_pool_variable = ""
     }
 }
