@@ -24,3 +24,7 @@ variable "Project.Database.ApprovalRequired" {
 variable "Project.Database.Report.Path" {
     value "C:\\DatabaseReports\\#{Octopus.Environment.Name}" {}
 }
+
+variable "Project.Connection.String" {
+    value "Server=#{Project.Database.Server.Name};Integrated Security=true;Database=#{Project.Database.Name}" {}
+}
