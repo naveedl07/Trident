@@ -154,23 +154,19 @@ step "deploy-the-database-changes" {
     }
 }
 
-step "deploy-trident-web" {
-    name = "Deploy trident.web"
+step "enable-maintenance-mode" {
+    name = "Enable maintenance mode"
     properties = {
-        Octopus.Action.MaxParallelism = "1"
         Octopus.Action.TargetRoles = "trident-web"
     }
 
     action "remove-from-load-balancer-clone-1" {
         action_type = "Octopus.Script"
         environments = ["staging", "production"]
-        name = "Remove from Load Balancer - clone (1)"
         properties = {
             Octopus.Action.RunOnServer = "true"
             Octopus.Action.Script.ScriptBody = <<-EOT
-                $machineName = $OctopusParameters["Octopus.Machine.Name"]
-                
-                write-host "remove $machinename from the load balancer"
+                write-host "Uploading low balencer to enable Maintenance Mode"
                 
                 
             EOT
@@ -179,10 +175,17 @@ step "deploy-trident-web" {
         }
         worker_pool = "default-worker-pool-1"
     }
+}
 
-    action "deploy-trident-web" {
+step "deploy-trident-web" {
+    name = "Deploy trident.web"
+    properties = {
+        Octopus.Action.MaxParallelism = "1"
+        Octopus.Action.TargetRoles = "trident-web"
+    }
+
+    action {
         action_type = "Octopus.TentaclePackage"
-        name = "Deploy trident.web"
         properties = {
             Octopus.Action.EnabledFeatures = "Octopus.Features.JsonConfigurationVariables"
             Octopus.Action.Package.DownloadOnTentacle = "False"
@@ -201,17 +204,21 @@ step "deploy-trident-web" {
             }
         }
     }
+}
+
+step "disable-maintenance-mode" {
+    name = "Disable Maintenance mode "
+    properties = {
+        Octopus.Action.TargetRoles = "trident-web"
+    }
 
     action "add-to-load-balancer" {
         action_type = "Octopus.Script"
         environments = ["staging", "production"]
-        name = "Add to Load Balancer"
         properties = {
             Octopus.Action.RunOnServer = "true"
             Octopus.Action.Script.ScriptBody = <<-EOT
-                $machineName = $OctopusParameters["Octopus.Machine.Name"]
-                
-                write-host "adding $machinename back to the load balancer."
+                write-host "Uploading low balencer to disable Maintenance Mode"
                 
                 
             EOT
