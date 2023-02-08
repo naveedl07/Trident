@@ -12,7 +12,11 @@ step "calculate-deployment-mode" {
 }
 
 step "run-octopus-deploy-runbook" {
+    condition = "Variable"
     name = "Run Octopus Deploy Runbook"
+    properties = {
+        Octopus.Step.ConditionVariableExpression = "(#{unless Octopus.Deployment.Error}#{Octopus.Action[Calculate Deployment Mode].Output.RunOnDeploy}#{/unless}.)"
+    }
 
     action {
         properties = {
@@ -37,8 +41,11 @@ step "run-octopus-deploy-runbook" {
 }
 
 step "generate-database-delta-report" {
-    condition = "Always"
+    condition = "Variable"
     name = "Generate Database Delta Report"
+    properties = {
+        Octopus.Step.ConditionVariableExpression = "(#{unless Octopus.Deployment.Error}#{Octopus.Action[Calculate Deployment Mode].Output.RunOnDeploy}#{/unless}.)"
+    }
 
     action {
         action_type = "Octopus.Script"
@@ -152,7 +159,11 @@ step "enable-maintenance-mode" {
 }
 
 step "deploy-the-database-changes" {
+    condition = "Variable"
     name = "Deploy the Database changes "
+    properties = {
+        Octopus.Step.ConditionVariableExpression = "(#{unless Octopus.Deployment.Error}#{Octopus.Action[Calculate Deployment Mode].Output.RunOnDeploy}#{/unless}.)"
+    }
 
     action {
         action_type = "Octopus.Script"
