@@ -119,6 +119,25 @@ step "approve-database-delta-script" {
     }
 }
 
+step "enable-maintenance-mode" {
+    name = "Enable maintenance mode"
+
+    action "remove-from-load-balancer-clone-1" {
+        action_type = "Octopus.Script"
+        properties = {
+            Octopus.Action.RunOnServer = "true"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                write-host "Uploading low balencer to enable Maintenance Mode"
+                
+                
+            EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool = "default-worker-pool-1"
+    }
+}
+
 step "deploy-the-database-changes" {
     name = "Deploy the Database changes "
 
@@ -151,25 +170,6 @@ step "deploy-the-database-changes" {
                 SelectionMode = "immediate"
             }
         }
-    }
-}
-
-step "enable-maintenance-mode" {
-    name = "Enable maintenance mode"
-
-    action "remove-from-load-balancer-clone-1" {
-        action_type = "Octopus.Script"
-        properties = {
-            Octopus.Action.RunOnServer = "true"
-            Octopus.Action.Script.ScriptBody = <<-EOT
-                write-host "Uploading low balencer to enable Maintenance Mode"
-                
-                
-            EOT
-            Octopus.Action.Script.ScriptSource = "Inline"
-            Octopus.Action.Script.Syntax = "PowerShell"
-        }
-        worker_pool = "default-worker-pool-1"
     }
 }
 
@@ -232,5 +232,29 @@ step "notify-devs-of-status" {
             Octopus.Action.Email.Subject = "#{Octopus.Project.Name} #{Octopus.Release.Number} to #{Octopus.Environment.Name} has #{if Octopus.Deployment.Error}failed#{else}completed successfully#{/if}"
             Octopus.Action.Email.ToTeamIds = "trident-notifications"
         }
+    }
+}
+
+step "verify-application-post-deployment" {
+    name = "Verify application post deployment"
+
+    action {
+        action_type = "Octopus.Script"
+        properties = {
+            Octopus.Action.RunOnServer = "true"
+            Octopus.Action.Script.ScriptBody = <<-EOT
+                $randomNumber = Get-Random -Minimum 1 -Maximum 100
+                
+                Write-Host "The random number is $randomNumber.  If it is above 5, this will fail the step."
+                if ($randomNumber -ge 5)
+                {
+                	Write-Host "An error occurred verifying the application."
+                    exit 1
+                }
+            EOT
+            Octopus.Action.Script.ScriptSource = "Inline"
+            Octopus.Action.Script.Syntax = "PowerShell"
+        }
+        worker_pool = "default-worker-pool-1"
     }
 }
