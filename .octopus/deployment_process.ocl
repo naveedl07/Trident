@@ -162,7 +162,6 @@ step "enable-maintenance-mode" {
 
     action "remove-from-load-balancer-clone-1" {
         action_type = "Octopus.Script"
-        environments = ["staging", "production"]
         properties = {
             Octopus.Action.RunOnServer = "true"
             Octopus.Action.Script.ScriptBody = <<-EOT
@@ -214,7 +213,6 @@ step "disable-maintenance-mode" {
 
     action "add-to-load-balancer" {
         action_type = "Octopus.Script"
-        environments = ["staging", "production"]
         properties = {
             Octopus.Action.RunOnServer = "true"
             Octopus.Action.Script.ScriptBody = <<-EOT
