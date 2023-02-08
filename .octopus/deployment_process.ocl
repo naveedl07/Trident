@@ -156,9 +156,6 @@ step "deploy-the-database-changes" {
 
 step "enable-maintenance-mode" {
     name = "Enable maintenance mode"
-    properties = {
-        Octopus.Action.TargetRoles = "trident-web"
-    }
 
     action "remove-from-load-balancer-clone-1" {
         action_type = "Octopus.Script"
@@ -207,9 +204,6 @@ step "deploy-trident-web" {
 
 step "disable-maintenance-mode" {
     name = "Disable Maintenance mode "
-    properties = {
-        Octopus.Action.TargetRoles = "trident-web"
-    }
 
     action "add-to-load-balancer" {
         action_type = "Octopus.Script"
