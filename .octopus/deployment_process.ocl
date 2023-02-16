@@ -65,7 +65,7 @@ step "generate-database-delta-report" {
                 & $appToRun --ConnectionString="$connectionString" --PreviewReportPath="$reportPath"
                 
                 New-OctopusArtifact -Path "$generatedReport" -Name "$environmentName.UpgradeReport.html"
-            EOT
+                EOT
             Octopus.Action.Script.ScriptSource = "Inline"
             Octopus.Action.Script.Syntax = "PowerShell"
         }
@@ -129,7 +129,7 @@ step "enable-maintenance-mode" {
                 write-host "Uploading low balencer to enable Maintenance Mode"
                 
                 
-            EOT
+                EOT
             Octopus.Action.Script.ScriptSource = "Inline"
             Octopus.Action.Script.Syntax = "PowerShell"
         }
@@ -157,7 +157,7 @@ step "deploy-the-database-changes" {
                 $appToRun = ".\Octopus.Trident.Database.DbUp"
                 
                 & $appToRun --ConnectionString="$connectionString"
-            EOT
+                EOT
             Octopus.Action.Script.ScriptSource = "Inline"
             Octopus.Action.Script.Syntax = "PowerShell"
         }
@@ -216,7 +216,7 @@ step "disable-maintenance-mode" {
                 write-host "Uploading low balencer to disable Maintenance Mode"
                 
                 
-            EOT
+                EOT
             Octopus.Action.Script.ScriptSource = "Inline"
             Octopus.Action.Script.Syntax = "PowerShell"
         }
@@ -254,7 +254,7 @@ step "verify-application-post-deployment" {
                 	Write-Host "An error occurred verifying the application."
                     exit 1
                 }
-            EOT
+                EOT
             Octopus.Action.Script.ScriptSource = "Inline"
             Octopus.Action.Script.Syntax = "PowerShell"
         }
